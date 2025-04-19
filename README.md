@@ -15,7 +15,7 @@ An advanced job application screening system that uses AI to process CVs, match 
 
 ## Screenshots
 
-#### - Dashboard
+- **Dashboard**
 ![Dashboard](docs/images/Dashboard.png)
 
 #### - Pipeline Processing 
