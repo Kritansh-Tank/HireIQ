@@ -1,0 +1,24 @@
+To: {email}
+
+Subject: Interview Invitation for {job_title} Position
+
+Dear {candidate_name},
+
+We are pleased to inform you that your application for the {job_title} position has been shortlisted. Your qualifications and experience align well with what we're looking for in this role.
+
+We would like to invite you to an interview to discuss your application further. The details are as follows:
+
+Interview Type: {interview_type}
+Date: {interview_date}
+Time: {interview_time}
+
+{additional_instructions}
+
+Please confirm your availability by replying to this email. If the proposed time doesn't work for you, please suggest alternative times that would be more convenient.
+
+We look forward to speaking with you and learning more about your skills and experience.
+
+Best regards,
+Recruitment Team
+{company_name}
+{contact_info}
