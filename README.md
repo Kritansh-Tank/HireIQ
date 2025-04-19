@@ -15,8 +15,13 @@ An advanced job application screening system that uses AI to process CVs, match 
 
 ## Screenshots
 
+#### - Dashboard
 ![Dashboard](docs/images/Dashboard.png)
+
+#### - Pipeline Processing 
 ![Processing Pipeline](docs/images/Processing.png)
+
+#### - End Result
 ![Output](docs/images/Output.png)
 
 ## System Architecture
@@ -234,7 +239,3 @@ The application generates logs in the following locations:
 - API log: `logs/api.log`
 
 These logs can be helpful for troubleshooting issues.
-
-## License
-
-MIT License 
