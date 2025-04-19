@@ -26,8 +26,8 @@ USE_LOCAL_EMBEDDINGS = True
 NLP_MODEL = "en_core_web_md"
 
 # Email settings
-EMAIL_SENDER = "lmaofox1@gmail.com"
-PASSWORD = "rdkkomaudnimzooq"
+EMAIL_SENDER = "Sender's Email"
+PASSWORD = "Your SMTP Password"
 EMAIL_TEMPLATE_PATH = BASE_DIR / "utils" / "email_templates"
 
 # Logging settings
