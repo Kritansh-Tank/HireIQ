@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HireIQ</title>
+  </head>
+  <body>
+    {% extends "base.html" %} {% block title %} {{ candidate.name or 'Candidate #' + candidate.id|string }} - Candidate Details {% endblock %} {% block content %}
+    <!-- Candidate Profile -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item active">Candidate Details</li>
+          </ol>
+        </nav>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">
+              {{ candidate.name or 'Candidate #' + candidate.id|string }}
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-8">
+                <div class="mb-4">
+                  <h4 class="mb-3">Contact Information</h4>
+                  <table class="table table-bordered">
+                    <tr>
+                      <th style="width: 150px">CV ID</th>
+                      <td>{{ candidate.cv_id }}</td>
+                    </tr>
+                    {% if candidate.email %}
+                    <tr>
+                      <th>Email</th>
+                      <td>
+                        <a href="mailto:{{ candidate.email }}"
+                          >{{ candidate.email }}</a
+                        >
+                      </td>
+                    </tr>
+                    {% endif %} {% if candidate.phone %}
+                    <tr>
+                      <th>Phone</th>
+                      <td>{{ candidate.phone }}</td>
+                    </tr>
+                    {% endif %}
+                  </table>
+                </div>
+
+                <div class="mb-4">
+                  <h4>Experience</h4>
+                  <ul class="list-group">
+                    {% for exp in candidate.experience %}
+                    <li class="list-group-item">{{ exp }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card mb-3">
+                  <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Skills</h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="skills-list">
+                      {% for skill in candidate.skills %}
+                      <span class="badge bg-primary">{{ skill }}</span>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Qualifications</h5>
+                  </div>
+                  <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                      {% for qual in candidate.qualifications %}
+                      <li class="list-group-item">{{ qual }}</li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Job Matches -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Job Matches ({{ matches|length }})</h3>
+          </div>
+          <div class="card-body">
+            {% if matches %}
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Job Title</th>
+                    <th>Match Score</th>
+                    <th>Skills Match</th>
+                    <th>Qualifications Match</th>
+                    <th>Experience Match</th>
+                    <th>Shortlisted</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in matches %}
+                  <tr>
+                    <td>
+                      <a href="/job/{{ item.job.id }}">
+                        {{ item.job.title }}
+                      </a>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="me-2">
+                          {{ "%.1f"|format(item.match.match_score * 100) }}%
+                        </div>
+                        <div class="progress flex-grow-1">
+                          <div
+                            class="progress-bar {% if item.match.match_score >= 0.8 %}match-high {% elif item.match.match_score >= 0.6 %}match-medium {% else %}match-low{% endif %}"
+                            role="progressbar"
+                            style="width: {{ item.match.match_score * 100 }}%"
+                            aria-valuenow="{{ item.match.match_score * 100 }}"
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                          ></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      {{ "%.1f"|format(item.match.skills_match_score * 100) }}%
+                    </td>
+                    <td>
+                      {{ "%.1f"|format(item.match.qualifications_match_score *
+                      100) }}%
+                    </td>
+                    <td>
+                      {{ "%.1f"|format(item.match.experience_match_score * 100)
+                      }}%
+                    </td>
+                    <td>
+                      {% if item.match.shortlisted %}
+                      <span class="badge bg-success"
+                        ><i class="fas fa-check me-1"></i> Yes</span
+                      >
+                      {% else %}
+                      <span class="badge bg-secondary">No</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <a
+                        href="/job/{{ item.job.id }}"
+                        class="btn btn-sm btn-primary"
+                      >
+                        <i class="fas fa-briefcase me-1"></i> View Job
+                      </a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle me-2"></i> No job matches found for
+              this candidate.
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resume Text -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">CV Text</h3>
+          </div>
+          <div class="card-body">
+            <pre
+              class="border p-3 bg-light"
+              style="max-height: 400px; overflow-y: auto; white-space: pre-wrap"
+            >
+{{ candidate.cv_text }}</pre
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if matches %}
+    <!-- Match Analysis -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Match Analysis</h3>
+          </div>
+          <div class="card-body">
+            <div class="summary-box mb-4">
+              <h4>Candidate Summary</h4>
+              <p>
+                This candidate has been matched with {{ matches|length }} job
+                positions. {% set shortlisted =
+                matches|selectattr('match.shortlisted', 'equalto', 1)|list %} {%
+                set high_matches = matches|selectattr('match.match_score', 'ge',
+                0.8)|list %} The candidate has been shortlisted for {{
+                shortlisted|length }} positions. {{ high_matches|length }}
+                positions have a high match score (80% or higher).
+              </p>
+            </div>
+
+            <div class="row">
+              <!-- Top Matching Jobs -->
+              <div class="col-12 mb-4">
+                <h5>
+                  <i class="fas fa-trophy me-2"></i> Top Matching Positions
+                </h5>
+                <div class="table-responsive">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>Rank</th>
+                        <th>Job Title</th>
+                        <th>Match Score</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for item in matches|sort(attribute='match.match_score',
+                      reverse=true) %} {% if loop.index &lt;= 5 %}
+                      <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>
+                          <a href="/job/{{ item.job.id }}"
+                            >{{ item.job.title }}</a
+                          >
+                        </td>
+                        <td>
+                          {{ "%.1f"|format(item.match.match_score * 100) }}%
+                        </td>
+                      </tr>
+                      {% endif %} {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Skills Frequency -->
+              <div class="col-md-6 mb-4">
+                <h5><i class="fas fa-chart-bar me-2"></i> Skills in Demand</h5>
+                <div class="mt-3">
+                  {% set job_skills = [] %} {% for item in matches %} {% for
+                  skill in item.job.skills %} {% if job_skills.append(skill)
+                  %}{% endif %} {% endfor %} {% endfor %} {% set skill_counts =
+                  {} %} {% for skill in job_skills %} {% if skill in
+                  skill_counts %} {% if skill_counts.update({skill:
+                  skill_counts[skill] + 1}) %}{% endif %} {% else %} {% if
+                  skill_counts.update({skill: 1}) %}{% endif %} {% endif %} {%
+                  endfor %}
+
+                  <div class="skills-list">
+                    {% for skill, count in skill_counts|dictsort(false,
+                    'value')|reverse %} {% if loop.index &lt;= 10 %} {% if skill in
+                    candidate.skills %}
+                    <span class="badge bg-success"
+                      >{{ skill }} ({{ count }})</span
+                    >
+                    {% else %}
+                    <span class="badge bg-secondary"
+                      >{{ skill }} ({{ count }})</span
+                    >
+                    {% endif %} {% endif %} {% endfor %}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Required vs. Missing Skills -->
+              <div class="col-md-6 mb-4">
+                <h5>
+                  <i class="fas fa-check-circle me-2"></i> Skills Analysis
+                </h5>
+
+                <!-- Get unique skills from all matched jobs -->
+                {% set all_job_skills = [] %} {% for item in matches %} {% for
+                skill in item.job.skills %} {% if skill not in all_job_skills %}
+                {% if all_job_skills.append(skill) %}{% endif %} {% endif %} {%
+                endfor %} {% endfor %}
+
+                <!-- Count skills the candidate has -->
+                {% set matching_skills = [] %} {% set missing_skills = [] %} {%
+                for skill in all_job_skills %} {% if skill in candidate.skills
+                %} {% if matching_skills.append(skill) %}{% endif %} {% else %}
+                {% if missing_skills.append(skill) %}{% endif %} {% endif %} {%
+                endfor %}
+
+                <div class="mt-3">
+                  <div class="d-flex align-items-center mb-3">
+                    <div style="width: 130px">Has Skills</div>
+                    <div class="progress flex-grow-1">
+                      <div
+                        class="progress-bar match-high"
+                        role="progressbar"
+                        style="width: {{ matching_skills|length / all_job_skills|length * 100 }}%"
+                        aria-valuenow="{{ matching_skills|length }}"
+                        aria-valuemin="0"
+                        aria-valuemax="{{ all_job_skills|length }}"
+                      >
+                        {{ matching_skills|length }} / {{ all_job_skills|length
+                        }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <h6 class="mt-4">Missing Skills</h6>
+                  <div class="skills-list">
+                    {% for skill in missing_skills %}
+                    <span class="badge bg-secondary">{{ skill }}</span>
+                    {% endfor %} {% if missing_skills|length == 0 %}
+                    <span class="text-success"
+                      >No missing skills! The candidate has all required
+                      skills.</span
+                    >
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %} {% endblock %}
+  </body>
+</html>

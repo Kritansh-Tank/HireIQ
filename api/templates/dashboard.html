@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HireIQ</title>
+  </head>
+  <body>
+
+{% extends "base.html" %}
+
+{% block title %}Job Screening Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="summary-box">
+            <h1 class="mb-4 text-center">AI-Powered Job Application Screening</h1>
+            <p class="lead text-center">Start the screening process to match candidates with job descriptions and view the results.</p>
+        </div>
+    </div>
+</div>
+
+<div id="main-content-area">
+    <div class="row justify-content-center mb-5" id="start-section-container" {% if results %}style="display: none;"{% endif %}>
+        <div class="col-lg-12">
+            <div class="card shadow">
+                <div class="card-body text-center p-5">
+                    <div id="start-section" {% if process_status and process_status != 'idle' %}style="display: none;"{% endif %}>
+                        <h2 class="mb-4"><i class="fas fa-play-circle me-2"></i>Start Screening Process</h2>
+                        <p class="mb-4">Click the button below to start the automated job screening process. This will:</p>
+                        <ul class="text-start mb-4 mx-auto" style="max-width: 400px;">
+                            <li>Process job descriptions from the database</li>
+                            <li>Analyze candidate CVs</li>
+                            <li>Match candidates to jobs</li>
+                            <li>Generate a comprehensive screening summary</li>
+                        </ul>
+                        <button id="startProcessBtn" class="btn btn-success btn-lg">
+                            <i class="fas fa-play me-2"></i> Start Screening Process
+                        </button>
+                    </div>
+
+                    <div id="progress-section" {% if not process_status or process_status == 'idle' %}style="display: none;"{% endif %}>
+                        <h2 class="mb-4"><i class="fas fa-spinner me-2"></i>Processing</h2>
+                        <div class="mb-3">
+                            <div class="progress" style="height: 25px;">
+                                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                    role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                                    {{ progress|default('0') }}%
+                                </div>
+                            </div>
+                        </div>
+                        <p id="statusMessage" class="mb-4">{{ status_message|default('Initializing process...') }}</p>
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle me-2"></i> This process may take several minutes depending on the size of your dataset.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="results-section" {% if not results %}style="display: none;"{% endif %}>
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h2 class="mb-0"><i class="fas fa-check-circle me-2"></i>Job Screening Summary</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="resultsContent">
+                            {% if results %}
+                                {{ results|safe }}
+                            {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-center">
+                            <button id="sendEmailsBtn" class="btn btn-success">
+                                <i class="fas fa-paper-plane me-2"></i> Send Invitation Emails
+                            </button>
+                        </div>
+                        <div id="emailResult" class="mt-3" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-4 text-center">
+                <button id="resetBtn" class="btn btn-primary">
+                    <i class="fas fa-redo me-2"></i> Run Another Screening
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const startProcessBtn = document.getElementById('startProcessBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const startSection = document.getElementById('start-section');
+    const startSectionContainer = document.getElementById('start-section-container');
+    const progressSection = document.getElementById('progress-section');
+    const resultsSection = document.getElementById('results-section');
+    const progressBar = document.getElementById('progressBar');
+    const statusMessage = document.getElementById('statusMessage');
+    const resultsContent = document.getElementById('resultsContent');
+    
+    // Email related elements
+    const sendEmailsBtn = document.getElementById('sendEmailsBtn');
+    const emailResult = document.getElementById('emailResult');
+    
+    let processingInterval;
+    
+    // Handle send emails button
+    if (sendEmailsBtn) {
+        sendEmailsBtn.addEventListener('click', function() {
+            // Disable button to prevent multiple clicks
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Sending...';
+            emailResult.innerHTML = '<div class="alert alert-info">Sending emails, please wait...</div>';
+            emailResult.style.display = 'block';
+            
+            // Send emails - backend will automatically use the first job ID
+            fetch('/api/send-emails', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    emailResult.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5><i class="fas fa-check-circle me-2"></i> Emails Processed</h5>
+                            <p>${data.message}</p>
+                            <p>Successfully sent ${data.sent} emails. ${data.failed} failed.</p>
+                        </div>`;
+                } else {
+                    emailResult.innerHTML = `<div class="alert alert-danger">Error: ${data.message}</div>`;
+                }
+                
+                // Re-enable the button
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Send Invitation Emails';
+            })
+            .catch(error => {
+                emailResult.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Send Invitation Emails';
+            });
+        });
+    }
+    
+    function updateProgress() {
+        console.log("Checking process status...");
+        fetch('/api/process-status')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Process status data:", data);
+                
+                if (data.status === 'idle') {
+                    // Process not started or completed
+                    clearInterval(processingInterval);
+                    
+                    if (data.results) {
+                        // Show results
+                        resultsContent.innerHTML = data.results;
+                        resultsSection.style.display = 'block';
+                        progressSection.style.display = 'none';
+                        startSectionContainer.style.display = 'none';
+                        
+                        console.log("Process completed, showing results");
+                    } else {
+                        // No results, show start section
+                        startSectionContainer.style.display = 'block';
+                        startSection.style.display = 'block';
+                        progressSection.style.display = 'none';
+                        resultsSection.style.display = 'none';
+                        
+                        // Re-enable start button
+                        startProcessBtn.disabled = false;
+                        startProcessBtn.innerHTML = '<i class="fas fa-play me-2"></i> Start Screening Process';
+                        
+                        console.log("Process not running, ready to start");
+                    }
+                } else {
+                    // Process is running
+                    progressBar.style.width = data.progress + '%';
+                    progressBar.setAttribute('aria-valuenow', data.progress);
+                    progressBar.textContent = data.progress + '%';
+                    statusMessage.textContent = data.message;
+                    
+                    progressSection.style.display = 'block';
+                    startSection.style.display = 'none';
+                    startSectionContainer.style.display = 'block';
+                    resultsSection.style.display = 'none';
+                    
+                    console.log("Process running, progress:", data.progress);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching process status:', error);
+                // Show error message to user
+                statusMessage.innerHTML = `<div class="alert alert-danger">Error checking status: ${error.message}. Retrying...</div>`;
+            });
+    }
+    
+    startProcessBtn.addEventListener('click', function() {
+        console.log("Start button clicked");
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Starting...';
+        
+        // Start the process
+        fetch('/api/start-process', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Start process response:", data);
+            
+            if (data.status === 'started') {
+                // Show progress section
+                startSection.style.display = 'none';
+                progressSection.style.display = 'block';
+                resultsSection.style.display = 'none';
+                statusMessage.textContent = data.message || "Starting process...";
+                
+                // Start interval to update progress
+                if (processingInterval) {
+                    clearInterval(processingInterval);
+                }
+                processingInterval = setInterval(updateProgress, 2000);
+                
+                // Immediately check status once
+                updateProgress();
+            } else {
+                // Show error
+                console.error("Error starting process:", data.message);
+                alert('Error: ' + data.message);
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-play me-2"></i> Start Screening Process';
+            }
+        })
+        .catch(error => {
+            console.error('Error starting process:', error);
+            
+            // Show error to user
+            statusMessage.innerHTML = `<div class="alert alert-danger">Error starting process: ${error.message}</div>`;
+            progressSection.style.display = 'block';
+            startSection.style.display = 'none';
+            
+            // Re-enable button after 5 seconds
+            setTimeout(() => {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-play me-2"></i> Start Screening Process';
+                startSection.style.display = 'block';
+                progressSection.style.display = 'none';
+            }, 5000);
+        });
+    });
+    
+    // Reset button handler
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            // Hide results section and show start section
+            resultsSection.style.display = 'none';
+            startSectionContainer.style.display = 'block';
+            startSection.style.display = 'block';
+            progressSection.style.display = 'none';
+            
+            // Re-enable start button
+            startProcessBtn.disabled = false;
+            startProcessBtn.innerHTML = '<i class="fas fa-play me-2"></i> Start Screening Process';
+        });
+    }
+    
+    // Check if a process is already running when the page loads
+    console.log("Page loaded, checking initial status");
+    updateProgress();
+    
+    // Set up periodic status checking
+    processingInterval = setInterval(updateProgress, 5000);
+});
+</script>
+{% endblock %} 
+
+</body>
+</html>

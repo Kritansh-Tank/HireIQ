@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HireIQ</title>
+  </head>
+  <body>
+    {% extends "base.html" %} {% block title %}{{ job.title }} - Job Details{%
+    endblock %} {% block content %}
+    <!-- Job Details -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item active">Job Details</li>
+          </ol>
+        </nav>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+              <h3 class="mb-0">{{ job.title }}</h3>
+              <button
+                class="btn btn-sm btn-success run-job-matching"
+                data-job-id="{{ job.id }}"
+              >
+                <i class="fas fa-sync-alt me-1"></i> Re-run Matching
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="mb-3">Job Description</h4>
+                <p>{{ job.description }}</p>
+
+                <h5 class="mt-4 mb-2">Responsibilities</h5>
+                <ul>
+                  {% for resp in job.responsibilities %}
+                  <li>{{ resp }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              <div class="col-md-4">
+                <div class="card mb-3">
+                  <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Required Skills</h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="skills-list">
+                      {% for skill in job.skills %}
+                      <span class="badge bg-primary">{{ skill }}</span>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Qualifications</h5>
+                  </div>
+                  <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                      {% for qual in job.qualifications %}
+                      <li class="list-group-item">{{ qual }}</li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Candidates Matching -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Matched Candidates ({{ candidates|length }})</h3>
+          </div>
+          <div class="card-body">
+            {% if candidates %}
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Candidate</th>
+                    <th>Match Score</th>
+                    <th>Skills Match</th>
+                    <th>Qualifications Match</th>
+                    <th>Experience Match</th>
+                    <th>Shortlisted</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in candidates %}
+                  <tr>
+                    <td>
+                      <a href="/candidate/{{ item.candidate.id }}">
+                        {{ item.candidate.name or 'Candidate #' +
+                        item.candidate.id|string }}
+                      </a>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="me-2">
+                          {{ "%.1f"|format(item.match.match_score * 100) }}%
+                        </div>
+                        <div class="progress flex-grow-1">
+                          <div
+                            class="progress-bar {% if item.match.match_score >= 0.8 %}match-high {% elif item.match.match_score >= 0.6 %}match-medium {% else %}match-low{% endif %}"
+                            role="progressbar"
+                            style="width: {{ item.match.match_score * 100 }}%"
+                            aria-valuenow="{{ item.match.match_score * 100 }}"
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                          ></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      {{ "%.1f"|format(item.match.skills_match_score * 100) }}%
+                    </td>
+                    <td>
+                      {{ "%.1f"|format(item.match.qualifications_match_score *
+                      100) }}%
+                    </td>
+                    <td>
+                      {{ "%.1f"|format(item.match.experience_match_score * 100)
+                      }}%
+                    </td>
+                    <td>
+                      {% if item.match.shortlisted %}
+                      <span class="badge bg-success"
+                        ><i class="fas fa-check me-1"></i> Yes</span
+                      >
+                      {% else %}
+                      <span class="badge bg-secondary">No</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <a
+                        href="/candidate/{{ item.candidate.id }}"
+                        class="btn btn-sm btn-primary"
+                      >
+                        <i class="fas fa-user me-1"></i> View Profile
+                      </a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle me-2"></i> No candidates have been
+              matched with this job yet. Click the "Re-run Matching" button to
+              start the matching process.
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Matching Analysis -->
+    {% if candidates %}
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Match Analysis</h3>
+          </div>
+          <div class="card-body">
+            <div class="summary-box mb-4">
+              <h4>Summary</h4>
+              <p>
+                Found {{ candidates|length }} potential matches for this
+                position. {% set shortlisted =
+                candidates|selectattr('match.shortlisted', 'equalto', 1)|list %}
+                {% set high_matches = candidates|selectattr('match.match_score',
+                'ge', 0.8)|list %} {{ shortlisted|length }} candidates have been
+                shortlisted. {{ high_matches|length }} candidates have a high
+                match score (80% or higher).
+              </p>
+            </div>
+
+            <div class="row">
+              <!-- Top Skills Found -->
+              <div class="col-md-6 mb-4">
+                <h5>
+                  <i class="fas fa-chart-bar me-2"></i> Top Candidate Skills
+                </h5>
+                <div class="skills-list mt-3">
+                  {% set all_skills = [] %} {% for item in candidates %} {% for
+                  skill in item.candidate.skills %} {% if
+                  all_skills.append(skill) %}{% endif %} {% endfor %} {% endfor
+                  %} {% set skill_counts = {} %} {% for skill in all_skills %}
+                  {% if skill in skill_counts %} {% if
+                  skill_counts.update({skill: skill_counts[skill] + 1}) %}{%
+                  endif %} {% else %} {% if skill_counts.update({skill: 1}) %}{%
+                  endif %} {% endif %} {% endfor %} {% for skill, count in
+                  skill_counts|dictsort(false, 'value')|reverse %} {% if
+                  loop.index <= 10 %}
+                  <span class="badge bg-primary"
+                    >{{ skill }} ({{ count }})</span
+                  >
+                  {% endif %} {% endfor %}
+                </div>
+              </div>
+
+              <!-- Match Score Distribution -->
+              <div class="col-md-6 mb-4">
+                <h5>
+                  <i class="fas fa-chart-pie me-2"></i> Match Score Distribution
+                </h5>
+                <div class="mt-3">
+                  {% set high = candidates|selectattr('match.match_score', 'ge',
+                  0.8)|list|length %} {% set medium =
+                  candidates|selectattr('match.match_score', 'ge',
+                  0.6)|selectattr('match.match_score', 'lt', 0.8)|list|length %}
+                  {% set low = candidates|selectattr('match.match_score', 'lt',
+                  0.6)|list|length %}
+
+                  <div class="d-flex align-items-center mb-2">
+                    <div style="width: 100px">High (80%+)</div>
+                    <div class="progress flex-grow-1">
+                      <div
+                        class="progress-bar match-high"
+                        role="progressbar"
+                        style="width: {{ high / candidates|length * 100 }}%"
+                        aria-valuenow="{{ high }}"
+                        aria-valuemin="0"
+                        aria-valuemax="{{ candidates|length }}"
+                      >
+                        {{ high }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="d-flex align-items-center mb-2">
+                    <div style="width: 100px">Medium (60-79%)</div>
+                    <div class="progress flex-grow-1">
+                      <div
+                        class="progress-bar match-medium"
+                        role="progressbar"
+                        style="width: {{ medium / candidates|length * 100 }}%"
+                        aria-valuenow="{{ medium }}"
+                        aria-valuemin="0"
+                        aria-valuemax="{{ candidates|length }}"
+                      >
+                        {{ medium }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="d-flex align-items-center mb-2">
+                    <div style="width: 100px">Low (<60%)</div>
+                    <div class="progress flex-grow-1">
+                      <div
+                        class="progress-bar match-low"
+                        role="progressbar"
+                        style="width: {{ low / candidates|length * 100 }}%"
+                        aria-valuenow="{{ low }}"
+                        aria-valuemin="0"
+                        aria-valuemax="{{ candidates|length }}"
+                      >
+                        {{ low }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %} {% endblock %} {% block extra_js %}
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Run matching for this job
+        document
+          .querySelector(".run-job-matching")
+          .addEventListener("click", function () {
+            const jobId = this.getAttribute("data-job-id");
+            this.disabled = true;
+            this.innerHTML =
+              '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
+
+            fetch("/api/run-matching?job_id=" + jobId, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.status === "success") {
+                  alert(
+                    "Matching process completed for this job! Found " +
+                      data.matches_count +
+                      " matches."
+                  );
+                  location.reload();
+                } else {
+                  alert("Error: " + data.message);
+                }
+              })
+              .catch((error) => {
+                alert("Error running matching process: " + error);
+              })
+              .finally(() => {
+                this.disabled = false;
+                this.innerHTML =
+                  '<i class="fas fa-sync-alt me-1"></i> Re-run Matching';
+              });
+          });
+      });
+    </script>
+    {% endblock %}
+  </body>
+</html>

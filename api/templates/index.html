@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HireIQ</title>
+  </head>
+  <body>
+    {% extends "base.html" %} {% block title %}Home - AI-Powered Job Screening{%
+    endblock %} {% block content %}
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="summary-box">
+          <h1 class="mb-4">AI-Powered Job Application Screening</h1>
+          <p class="lead">
+            Welcome to HireIQ - an advanced job application screening system
+            that uses AI to process CVs, match candidates with job descriptions,
+            and streamline the hiring process.
+          </p>
+
+          <div class="d-flex justify-content-end">
+            <button id="runMatchingBtn" class="btn btn-success">
+              <i class="fas fa-sync-alt me-2"></i> Run Matching Process
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Job Descriptions</h3>
+          </div>
+          <div class="card-body">
+            {% if jobs %}
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Key Skills</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for job in jobs %}
+                  <tr>
+                    <td>{{ job.id }}</td>
+                    <td>{{ job.title }}</td>
+                    <td>
+                      <div class="skills-list">
+                        {% for skill in job.skills[:3] %}
+                        <span class="badge bg-primary">{{ skill }}</span>
+                        {% endfor %} {% if job.skills|length &gt; 3 %}
+                        <span class="badge bg-secondary"
+                          >+{{ job.skills|length - 3 }} more</span
+                        >
+                        {% endif %}
+                      </div>
+                    </td>
+                    <td>
+                      <a
+                        href="/job/{{ job.id }}"
+                        class="btn btn-sm btn-primary"
+                      >
+                        <i class="fas fa-search me-1"></i> View Matches
+                      </a>
+                      <button
+                        class="btn btn-sm btn-outline-primary run-job-matching"
+                        data-job-id="{{ job.id }}"
+                      >
+                        <i class="fas fa-sync-alt me-1"></i> Match
+                      </button>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle me-2"></i> No job descriptions found
+              in the database.
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Information Card -->
+    <div class="row">
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          <div class="card-header">
+            <h4 class="mb-0">
+              <i class="fas fa-microchip me-2"></i> System Features
+            </h4>
+          </div>
+          <div class="card-body">
+            <ul class="list-group list-group-flush">
+              <li
+                class="list-group-item d-flex justify-content-between align-items-center"
+              >
+                Local LLM Integration
+                <span class="badge bg-success rounded-pill"
+                  ><i class="fas fa-check"></i
+                ></span>
+              </li>
+              <li
+                class="list-group-item d-flex justify-content-between align-items-center"
+              >
+                Multi-Agent Framework
+                <span class="badge bg-success rounded-pill"
+                  ><i class="fas fa-check"></i
+                ></span>
+              </li>
+              <li
+                class="list-group-item d-flex justify-content-between align-items-center"
+              >
+                Vector Embeddings
+                <span class="badge bg-success rounded-pill"
+                  ><i class="fas fa-check"></i
+                ></span>
+              </li>
+              <li
+                class="list-group-item d-flex justify-content-between align-items-center"
+              >
+                Optimized Performance
+                <span class="badge bg-success rounded-pill"
+                  ><i class="fas fa-check"></i
+                ></span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-8 mb-4">
+        <div class="card h-100">
+          <div class="card-header">
+            <h4 class="mb-0"><i class="fas fa-cogs me-2"></i> How It Works</h4>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <div class="d-flex align-items-center mb-2">
+                  <div class="bg-primary rounded-circle p-2 me-3">
+                    <i class="fas fa-file-alt text-white"></i>
+                  </div>
+                  <h5 class="mb-0">CV Processing</h5>
+                </div>
+                <p class="text-muted">
+                  Extracts skills, qualifications, and experience from candidate
+                  CVs.
+                </p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <div class="d-flex align-items-center mb-2">
+                  <div class="bg-primary rounded-circle p-2 me-3">
+                    <i class="fas fa-briefcase text-white"></i>
+                  </div>
+                  <h5 class="mb-0">JD Analysis</h5>
+                </div>
+                <p class="text-muted">
+                  Processes job descriptions to extract key requirements and
+                  qualifications.
+                </p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <div class="d-flex align-items-center mb-2">
+                  <div class="bg-primary rounded-circle p-2 me-3">
+                    <i class="fas fa-sync-alt text-white"></i>
+                  </div>
+                  <h5 class="mb-0">Matching</h5>
+                </div>
+                <p class="text-muted">
+                  Uses AI to match candidates with job openings based on
+                  multiple factors.
+                </p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <div class="d-flex align-items-center mb-2">
+                  <div class="bg-primary rounded-circle p-2 me-3">
+                    <i class="fas fa-users text-white"></i>
+                  </div>
+                  <h5 class="mb-0">Shortlisting</h5>
+                </div>
+                <p class="text-muted">
+                  Automatically shortlists top candidates for each position.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endblock %} {% block extra_js %}
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Run matching for all jobs
+        document
+          .getElementById("runMatchingBtn")
+          .addEventListener("click", function () {
+            this.disabled = true;
+            this.innerHTML =
+              '<i class="fas fa-spinner fa-spin me-2"></i> Processing...';
+
+            fetch("/api/run-matching", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.status === "success") {
+                  alert(
+                    "Matching process completed successfully! Processed " +
+                      data.jobs_count +
+                      " jobs with " +
+                      data.total_matches +
+                      " matches."
+                  );
+                  location.reload();
+                } else {
+                  alert("Error: " + data.message);
+                }
+              })
+              .catch((error) => {
+                alert("Error running matching process: " + error);
+              })
+              .finally(() => {
+                this.disabled = false;
+                this.innerHTML =
+                  '<i class="fas fa-sync-alt me-2"></i> Run Matching Process';
+              });
+          });
+
+        // Run matching for individual job
+        document.querySelectorAll(".run-job-matching").forEach((btn) => {
+          btn.addEventListener("click", function () {
+            const jobId = this.getAttribute("data-job-id");
+            this.disabled = true;
+            this.innerHTML =
+              '<i class="fas fa-spinner fa-spin me-1"></i> Matching...';
+
+            fetch("/api/run-matching?job_id=" + jobId, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.status === "success") {
+                  alert(
+                    "Matching process completed for job #" +
+                      jobId +
+                      "! Found " +
+                      data.matches_count +
+                      " matches."
+                  );
+                  location.reload();
+                } else {
+                  alert("Error: " + data.message);
+                }
+              })
+              .catch((error) => {
+                alert("Error running matching process: " + error);
+              })
+              .finally(() => {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Match';
+              });
+          });
+        });
+      });
+    </script>
+    {% endblock %}
+  </body>
+</html>

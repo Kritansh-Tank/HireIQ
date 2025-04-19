@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HireIQ</title>
+  </head>
+  <body>
+    {% extends "base.html" %} {% block title %}Error - AI-Powered Job
+    Screening{% endblock %} {% block content %}
+    <div class="row mb-4">
+      <div class="col-12 text-center">
+        <div class="py-5">
+          <h1 class="display-1 text-danger mb-4">
+            <i class="fas fa-exclamation-circle"></i>
+          </h1>
+          <h2 class="mb-4">Error {{ status_code }}</h2>
+          <p class="lead mb-4">{{ detail }}</p>
+          <a href="/" class="btn btn-primary">
+            <i class="fas fa-home me-2"></i> Return to Home
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endblock %}
+  </body>
+</html>
